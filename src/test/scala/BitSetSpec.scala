@@ -11,6 +11,8 @@ class BitSetSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Matchers 
 
   describe("BitSet") {
     val gen = Gen.choose(0, 1000)
+    val listGen = for (len <- gen; l <- Gen.listOfN(len, gen)) yield l
+    val listPairGen = for (l1 <- listGen; l2 <- listGen) yield (l1, l2)
 
     describe("get") {
       it("should return proper value") {
@@ -58,10 +60,7 @@ class BitSetSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Matchers 
 
     describe("or") {
       it("should return proper value") {
-        val listGen = for (len <- gen; l <- Gen.listOfN(len, gen)) yield l
-        val pairGen = for (l1 <- listGen; l2 <- listGen) yield (l1, l2)
-
-        forAll(pairGen, minSuccessful(1000)) { case (l1, l2) =>
+        forAll(listPairGen, minSuccessful(1000)) { case (l1, l2) =>
           val bs1 = new util.BitSet()
           val bs2 = new util.BitSet()
           val bsq1 = new BitSet()
@@ -113,6 +112,26 @@ class BitSetSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Matchers 
           bsq.clear(v)
           bs.clear(v)
           bsq.toLongArray shouldEqual bs.toLongArray
+        }
+      }
+    }
+
+    describe("intersects") {
+      it("should return proper value") {
+        val bs1 = new util.BitSet()
+        val bs2 = new util.BitSet()
+        val bsq1 = new BitSet()
+        val bsq2 = new BitSet()
+        val pairGen = for (i <- gen; j <- gen) yield (i, j)
+
+        forAll(pairGen, minSuccessful(1000)) { case (l1, l2) =>
+          bs1.set(l1)
+          bsq1.set(l1)
+
+          bs2.set(l2)
+          bsq2.set(l2)
+
+          bsq1.intersects(bsq2) shouldEqual bs1.intersects(bs2)
         }
       }
     }

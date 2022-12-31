@@ -1,5 +1,6 @@
 package bitset
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 
 class BitSet {
@@ -69,6 +70,20 @@ class BitSet {
     val (i, n) = offset(v)
     expand(i)
     ar(i) = ar(i) ^ (1L << n)
+  }
+
+  def intersects(s: BitSet): Boolean = {
+    val min = Math.min(ar.size, s.ar.size)
+    @tailrec
+    def loop(i: Int): Boolean =
+      if (i >= min) {
+        false
+      } else if ((ar(i) & s.ar(i)) != 0) {
+        true
+      } else {
+        loop(i + 1)
+      }
+    loop(0)
   }
 
   def toLongArray: Array[Long] = ar.toArray.clone()
