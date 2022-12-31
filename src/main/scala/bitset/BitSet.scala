@@ -86,6 +86,21 @@ class BitSet {
     loop(0)
   }
 
+  def xor(s: BitSet): Unit = {
+    if (ar.size < s.ar.size) {
+      for (i <- ar.indices) {
+        ar(i) = ar(i) ^ s.ar(i)
+      }
+      for (i <- ar.size until s.ar.size) {
+        ar.append(s.ar(i))
+      }
+    } else {
+      for (i <- s.ar.indices) {
+        ar(i) = ar(i) ^ s.ar(i)
+      }
+    }
+  }
+
   def toLongArray: Array[Long] = ar.toArray.clone()
 
   override def toString: String = {

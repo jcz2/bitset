@@ -135,5 +135,32 @@ class BitSetSpec extends AnyFunSpec with ScalaCheckPropertyChecks with Matchers 
         }
       }
     }
+
+    describe("xor") {
+      it("should return proper value") {
+        forAll(listPairGen, minSuccessful(1000)) { case (l1, l2) =>
+          val bs1 = new util.BitSet()
+          val bs2 = new util.BitSet()
+          val bsq1 = new BitSet()
+          val bsq2 = new BitSet()
+
+          l1.foreach(v => {
+            bs1.set(v)
+            bsq1.set(v)
+          })
+
+          l2.foreach(v => {
+            bs2.set(v)
+            bsq2.set(v)
+          })
+
+          bs1.xor(bs2)
+          bsq1.xor(bsq2)
+
+          bs1.toLongArray.sum shouldEqual bsq1.toLongArray.sum
+          bs2.toLongArray.sum shouldEqual bsq2.toLongArray.sum
+        }
+      }
+    }
   }
 }
