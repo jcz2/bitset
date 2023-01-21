@@ -6,70 +6,56 @@ import scala.collection.mutable.ArrayBuffer
 class BitSet {
   private val ar: ArrayBuffer[Long] = ArrayBuffer()
 
-  private def offset(i: Int): (Int, Int) = (i / 64, i % 64)
+  private def coords(i: Int): (Int, Int) = (i / 64, i % 64)
 
   private def expand(i: Int): Unit = {
-    if (i >= ar.size) {
-      var d = i - ar.size + 1
-      while (d > 0) {
-        ar.append(0)
-        d -= 1
-      }
-    }
+    val j = i - (ar.size - 1)
+    for (_ <- 0 until j) ar.append(0)
   }
 
   def set(v: Int): Unit = {
-    val (i, n) = offset(v)
-    expand(i)
-    ar(i) = ar(i) | (1L << n)
+    val (index, offset) = coords(v)
+    expand(index)
+    ar(index) = ar(index) | (1L << offset)
   }
 
   def get(v: Int): Boolean = {
-    val (i, n) = offset(v)
-    val result = ar(i) & (1L << n)
-    result != 0
+    val (index, offset) = coords(v)
+    if (index >= 0 && index < ar.size) {
+      val result = ar(index) & (1L << offset)
+      result != 0
+    } else {
+      false
+    }
   }
 
   def clear(v: Int): Unit = {
-    val (i, n) = offset(v)
-    ar(i) = ar(i) & (~(1L << n))
+    val (index, offset) = coords(v)
+    ar(index) = ar(index) & (~(1L << offset))
   }
 
-  def cardinality(): Int = {
-    ar.foldLeft(0)((acc, v) => acc + java.lang.Long.bitCount(v))
-  }
-
-  def and(s: BitSet): Unit = {
-    if (ar.size > s.ar.size) {
-      for (i <- s.ar.size until ar.size) {
-        ar(i) = 0L
-      }
+  def and(s: BitSet): Unit =
+    for (i <- ar.indices) {
+      val v = if (s.ar.isDefinedAt(i)) s.ar(i) else 0
+      ar(i) = ar(i) & v
     }
-    val min = Math.min(ar.size, s.ar.size)
-    for (i <- 0 until min) {
-      ar(i) = ar(i) & s.ar(i)
-    }
-  }
 
   def or(s: BitSet): Unit = {
-    if (ar.size < s.ar.size) {
-      for (i <- ar.indices) {
-        ar(i) = ar(i) | s.ar(i)
-      }
-      for (i <- ar.size until s.ar.size) {
-        ar.append(s.ar(i))
-      }
-    } else {
-      for (i <- s.ar.indices) {
-        ar(i) = ar(i) | s.ar(i)
-      }
-    }
+    expand(s.ar.size)
+    for (i <- s.ar.indices)
+      ar(i) = ar(i) | s.ar(i)
+  }
+
+  def xor(s: BitSet): Unit = {
+    expand(s.ar.size)
+    for (i <- s.ar.indices)
+      ar(i) = ar(i) ^ s.ar(i)
   }
 
   def flip(v: Int): Unit = {
-    val (i, n) = offset(v)
-    expand(i)
-    ar(i) = ar(i) ^ (1L << n)
+    val (index, offset) = coords(v)
+    expand(index)
+    ar(index) = ar(index) ^ (1L << offset)
   }
 
   def intersects(s: BitSet): Boolean = {
@@ -84,21 +70,6 @@ class BitSet {
         loop(i + 1)
       }
     loop(0)
-  }
-
-  def xor(s: BitSet): Unit = {
-    if (ar.size < s.ar.size) {
-      for (i <- ar.indices) {
-        ar(i) = ar(i) ^ s.ar(i)
-      }
-      for (i <- ar.size until s.ar.size) {
-        ar.append(s.ar(i))
-      }
-    } else {
-      for (i <- s.ar.indices) {
-        ar(i) = ar(i) ^ s.ar(i)
-      }
-    }
   }
 
   def toLongArray: Array[Long] = ar.toArray.clone()
